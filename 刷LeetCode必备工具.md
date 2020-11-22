@@ -2,31 +2,50 @@
 
 ## Content
 
- * [刷LeetCode必备工具](#刷leetcode必备工具)
-      * [1. 排序](#1-排序)
-      * [2. 遍历](#2-遍历)
-      * [3. 树](#3-树)
-         * [3.1 树与子树问题](#31-树与子树问题)
-         * [3.2 树的构造](#32-树的构造)
-         * [3.3 求树高](#33-求树高)
-         * [3.4  层次遍历(非递归实现)](#34--层次遍历非递归实现)
-         * [3.5 求树宽](#35-求树宽)
-         * [3.6 树的先序、中序、后序遍历算法](#36-树的先序中序后序遍历算法)
-            * [<strong>3.6.1 递归实现</strong>](#361-递归实现)
-            * [<strong>3.6.2 非递归实现</strong>](#362-非递归实现)
-         * [3.7 N叉树前序遍历](#37-n叉树前序遍历)
-      * [4. 递归](#4-递归)
-      * [5. 队列](#5-队列)
-         * [创建队列](#创建队列)
-         * [队列操作](#队列操作)
-      * [6. 栈](#6-栈)
-         * [创建栈](#创建栈)
-         * [栈的操作](#栈的操作)
-      * [7. 技巧](#7-技巧)
-      * [8. 题型](#8-题型)
-         * [跳跃问题](#跳跃问题)
+[toc]
 
 ---
+
+### 前言
+
+有关于在刷Leetcode过程当中的各种参数讲解（看着有点头痛）
+
+```c
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** transpose(int** A, int ASize, int* AColSize, int* returnSize, int** returnColumnSizes){
+    int col_len=ASize;
+    int row_len=*AColSize;
+
+    int **ret=(int **)malloc(sizeof(int *)*row_len);//返回值初始化
+    for(int i=0;i<row_len;i++)
+    {
+        ret[i]=(int *)malloc(sizeof(int)*col_len);
+    }
+     //遍历赋值
+    for(int i=0;i<row_len;i++)
+    {
+        for(int j=0;j<col_len;j++)
+        {
+            ret[i][j]=A[j][i];
+        }
+    }
+    *returnSize=row_len;  //返回二维数组的行数
+    *returnColumnSizes = (int *)malloc(sizeof(int) * row_len);
+    for(int j=0;j<row_len;j++)
+    {
+       (*returnColumnSizes)[j]=col_len; //赋予每一行的数量
+    }
+    return ret;
+}
+//综上：
+//1. 返回的二维数组先要以行数来分配整个二维空间的大小，其次在进行赋值的时候要为每一行分配空间以列数为大小。
+//2. *returnSize: 返回二维数组的行数
+//3. **returnColumnSizes：记录的是每一行元素的个数，因此先以行数大小来决定分配空间的大小。其次在进行赋值过程当中最好采用            (*returnColumnSizes)[j]形式来。
+```
 
 
 
@@ -389,8 +408,8 @@ int main()
 
 - 问题描述
 
-  ```
-  给定一棵树求这棵树的树高
+  ```c
+  //给定一棵树求这棵树的树高
   ```
 
 - 解决方案
