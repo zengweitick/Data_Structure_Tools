@@ -94,6 +94,45 @@ int** transpose(int** A, int ASize, int* AColSize, int* returnSize, int** return
   //count:数组大小
   //sizeof(int):单个元素大小
   //cmp:指定的排序方式
+  //例子如下：
+  //-------------------------------------------------------------------------------------------------------
+  void intoArray(struct ListNode* head,int *array,int *count)
+  {
+      struct ListNode* node=head;
+      while(node!=NULL)
+      {
+         array[*count]=node->val;
+         *count=*count+1;
+         node=node->next;
+      }
+  }
+  int cmp(const void *a, const void *b)
+  {
+      return *(int*)a-*(int*)b;
+  }
+  void intoListNode(struct ListNode *ret,int *array,int len)
+  {
+      struct ListNode* p=ret;
+      
+      for(int i=0;i<len;i++)
+      {
+          p->val=array[i];
+          p=p->next;
+      }
+  }
+  struct ListNode* sortList(struct ListNode* head)
+  {
+      if(head==NULL||head->next==NULL)return head;
+       int array[50000]={0};
+      if(array==NULL)return NULL;
+      
+      int count=0;
+      intoArray(head,array,&count);
+      qsort(array,count,sizeof(int),cmp);
+      intoListNode(head,array,count);
+      return  head;
+  }
+  
   ```
 
 - 
