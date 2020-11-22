@@ -75,7 +75,28 @@ int** transpose(int** A, int ASize, int* AColSize, int* returnSize, int** return
   }
   ```
 
+- 采用leetcode内部排序算法也行，不过先指定升序还是降序
 
+  ```c
+  //升序
+  int cmp(const void *a, const void *b)
+  {
+      return *(int*)a-*(int*)b;
+  }
+  //降序
+  int cmp(const void *a, const void *b)
+  {
+      return *(int*)b-*(int*)a;
+  }
+  //在程序当中使用
+   qsort(array,count,sizeof(int),cmp);
+  //array:要排序的数组
+  //count:数组大小
+  //sizeof(int):单个元素大小
+  //cmp:指定的排序方式
+  ```
+
+- 
 
 ## 2. 遍历
 
