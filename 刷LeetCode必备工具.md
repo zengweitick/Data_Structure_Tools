@@ -1017,7 +1017,20 @@ void Postsearch(BigTree *b,int x)
   }
   ```
 
-  
+
+
+
+### 3.8 BFS && DFS
+
+#### 3.8.1 BFS
+
+
+
+#### 3.8.2 DFS
+
+
+
+
 
 
 
@@ -1600,6 +1613,102 @@ int Pop(Sqstack *S)
   ```
 
   
+
+- 利用二分法与位运算计算完全二叉树的节点个数（年轻人要讲武德系列）
+
+  - [题目描述](https://leetcode-cn.com/problems/count-complete-tree-nodes/)
+
+  - 实现方法
+
+    - 暴力法
+
+      ```c
+      /*
+      执行用时: 32 ms
+      内存消耗: 16.4 MB
+      */
+      int countNodes(struct TreeNode* root)
+      {
+          if(root==NULL)return 0;
+         return countNodes(root->left)+countNodes(root->right)+1;
+      }
+      ```
+
+    - DFS
+
+      ```c
+      /*
+      执行用时: 24 ms
+      内存消耗: 16.6 MB
+      */
+      void InOrder(struct TreeNode *node,int *count);
+      int countNodes(struct TreeNode* root)
+      {
+          int count=0;
+          InOrder(root,&count);
+           return count;
+      }
+      void InOrder(struct TreeNode *node,int *count)
+      {
+        if(node==NULL)return;
+         if(node->left!=NULL)
+         {
+             InOrder(node->left,count);
+         }
+           *count=*count+1;
+          if(node->right!=NULL)
+          {
+              InOrder(node->right,count);
+          }
+      }
+      
+      ```
+
+      
+
+    - 二分法+位运算
+
+      ```c
+      /*
+      执行用时: 20 ms
+      内存消耗: 16.5 MB
+      */
+      bool exists(struct TreeNode* root, int level, int k) {
+          int bits = 1 << (level - 1);
+          struct TreeNode* node = root;
+          while (node != NULL && bits > 0) {
+              if (!(bits & k)) {
+                  node = node->left;
+              } else {
+                  node = node->right;
+              }
+              bits >>= 1;
+          }
+          return node != NULL;
+      }
+      
+      int countNodes(struct TreeNode* root) {
+          if (root == NULL) {
+              return 0;
+          }
+          int level = 0;
+          struct TreeNode* node = root;
+          while (node->left != NULL) {
+              level++;
+              node = node->left;
+          }
+          int low = 1 << level, high = (1 << (level + 1)) - 1;
+          while (low < high) {
+              int mid = (high - low + 1) / 2 + low;
+              if (exists(root, level, mid)) {
+                  low = mid;
+              } else {
+                  high = mid - 1;
+              }
+          }
+          return low;
+      }
+      ```
 
 - 
 
