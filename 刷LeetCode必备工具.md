@@ -4,6 +4,8 @@
 
 [toc]
 
+
+
 ---
 
 ### 前言
@@ -1474,9 +1476,317 @@ int Pop(Sqstack *S)
 */
 ```
 
+## 7. 哈希表
 
+- 结构
 
-## 7. 技巧
+  ```c
+  #include"uthash.h"  
+  struct my_struct {  
+      int id;                    /* key */  
+      char name[10];             /* value */  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+  //hh是内部使用的hash处理句柄，在使用过程中，只需要在结构体中定义一个UT_hash_handle类型的变量即可，不需要为该句柄变量赋值，但必须在该结构体中定义该变量。
+  ```
+
+- 操作
+
+  - 查找
+
+    ```c
+    struct my_struct *find_user(int ikey) {  
+    struct my_struct *s;  
+    HASH_FIND_INT(g_users, &ikey, s );  
+    return s;  
+    }
+    //查找是利用宏来实现的，先声明hashTable变量来存储查找结果。
+    //第一个参数：查找的hash表
+    //第二个参数：投入查找的键值
+    //第三个参数：刚刚声明的结构体，原来存放结果。
+    ```
+
+  - 添加
+
+    ```c
+    void add_user(int ikey, char *value_buf) {  
+        struct my_struct *s;  
+        HASH_FIND_INT(g_users, &ikey, s);  /* 插入前先查看key值是否已经在hash表g_users里面了 */  
+        if (s==NULL) {  
+          s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+          s->ikey = ikey;  
+          HASH_ADD_INT(g_users, ikey, s );  /* 这里必须明确告诉插入函数，自己定义的hash结构体中键变量的名字 */  
+        }  
+        strcpy(s-> value, value_buf);  
+    }  
+    //同理，添加操作也是通过宏来实现
+    //由于uthash要求键（key）必须唯一，而uthash内部未对key值得唯一性进行很好的处理，因此它要求外部在插入操作时要确保其key值不在当前的hash表中，这就需要，在插入操作时，先查找hash表看其值是否已经存在，不存在在时再进行插入操作，在这里需要特别注意以下两点：
+    
+    ```
+
+    
+
+  - 删除
+
+    ```c
+    void delete_user(int ikey) {  
+        struct my_struct *s = NULL;  
+        HASH_FIND_INT(g_users, &ikey, s);  
+        if (s!=NULL) {  
+          HASH_DEL(g_users, s);   
+          free(s);              
+        }  
+    }  
+    ```
+
+  - 清空
+
+    ```c
+    void delete_all() {  
+      struct my_struct *current_user, *tmp;  
+      HASH_ITER(hh, users, current_user, tmp) {  
+      HASH_DEL(g_users,current_user);    
+    free(current_user);              
+      }  
+    }  
+    
+    //或者这里需要注意：uthash内部提供了另外一个清空函数:
+    HASH_CLEAR(hh, g_users);
+    ```
+
+  - **统计hash表中的已经存在的元素数**
+
+    ```c
+    unsigned int num_users;  
+    num_users = HASH_COUNT(g_users);  
+    printf("there are %u items\n", num_users);  
+    ```
+
+- 注意
+  -  在定义hash结构体时不要忘记定义**UT_hash_handle**的变量
+  -  需确保key值唯一，如果插入key-value对时，key值已经存在，再插入的时候就会出错。
+  - **不同的key值，其增加和查找调用的接口函数不一样，具体可见第4节。一般情况下，不通类型的key，其插入和查找接口函数是不一样的，删除、遍历、元素统计接口是通用的，特殊情况下，字符数组和字符串作为key值时，其插入接口函数不一样，但是查找接口是一样的。**
+
+- 完整例子
+
+  ```c
+  //key类型为int的完整的例子
+  #include <stdio.h>   /* gets */  
+  #include <stdlib.h>  /* atoi, malloc */  
+  #include <string.h>  /* strcpy */  
+  #include "uthash.h"  
+    
+  struct my_struct {  
+      int ikey;                    /* key */  
+      char value[10];  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+    
+  static struct my_struct *g_users = NULL;  
+    
+  void add_user(int mykey, char *value) {  
+      struct my_struct *s;  
+    
+      HASH_FIND_INT(users, &mykey, s);  /* mykey already in the hash? */  
+      if (s==NULL) {  
+        s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+        s->ikey = mykey;  
+        HASH_ADD_INT( users, ikey, s );  /* ikey: name of key field */  
+      }  
+      strcpy(s->value, value);  
+  }  
+    
+  struct my_struct *find_user(int mykey) {  
+      struct my_struct *s;  
+    
+      HASH_FIND_INT( users, &mykey, s );  /* s: output pointer */  
+      return s;  
+  }  
+    
+  void delete_user(struct my_struct *user) {  
+      HASH_DEL( users, user);  /* user: pointer to deletee */  
+      free(user);  
+  }  
+    
+  void delete_all() {  
+    struct my_struct *current_user, *tmp;  
+    
+    HASH_ITER(hh, users, current_user, tmp) {  
+      HASH_DEL(users,current_user);  /* delete it (users advances to next) */  
+      free(current_user);            /* free it */  
+    }  
+  }  
+    
+  void print_users() {  
+      struct my_struct *s;  
+    
+      for(s=users; s != NULL; s=(struct my_struct*)(s->hh.next)) {  
+          printf("user ikey %d: value %s\n", s->ikey, s->value);  
+      }  
+  }  
+    
+  int name_sort(struct my_struct *a, struct my_struct *b) {  
+      return strcmp(a->value,b->value);  
+  }  
+    
+  int id_sort(struct my_struct *a, struct my_struct *b) {  
+      return (a->ikey - b->ikey);  
+  }  
+    
+  void sort_by_name() {  
+      HASH_SORT(users, name_sort);  
+  }  
+    
+  void sort_by_id() {  
+      HASH_SORT(users, id_sort);  
+  }  
+    
+  int main(int argc, char *argv[]) {  
+      char in[10];  
+      int ikey=1, running=1;  
+      struct my_struct *s;  
+      unsigned num_users;  
+    
+      while (running) {  
+          printf(" 1. add user\n");  
+          printf(" 2. add/rename user by id\n");  
+          printf(" 3. find user\n");  
+          printf(" 4. delete user\n");  
+          printf(" 5. delete all users\n");  
+          printf(" 6. sort items by name\n");  
+          printf(" 7. sort items by id\n");  
+          printf(" 8. print users\n");  
+          printf(" 9. count users\n");  
+          printf("10. quit\n");  
+          gets(in);  
+          switch(atoi(in)) {  
+              case 1:  
+                  printf("name?\n");  
+                  add_user(ikey++, gets(in));  
+                  break;  
+              case 2:  
+                  printf("id?\n");  
+                  gets(in); ikey = atoi(in);  
+                  printf("name?\n");  
+                  add_user(ikey, gets(in));  
+                  break;  
+              case 3:  
+                  printf("id?\n");  
+                  s = find_user(atoi(gets(in)));  
+                  printf("user: %s\n", s ? s->value : "unknown");  
+                  break;  
+              case 4:  
+                  printf("id?\n");  
+                  s = find_user(atoi(gets(in)));  
+                  if (s) delete_user(s);  
+                  else printf("id unknown\n");  
+                  break;  
+              case 5:  
+                  delete_all();  
+                  break;  
+              case 6:  
+                  sort_by_name();  
+                  break;  
+              case 7:  
+                  sort_by_id();  
+                  break;  
+              case 8:  
+                  print_users();  
+                  break;  
+              case 9:  
+                  num_users=HASH_COUNT(users);  
+                  printf("there are %u users\n", num_users);  
+                  break;  
+              case 10:  
+                  running=0;  
+                  break;  
+          }  
+      }  
+    
+      delete_all();  /* free any structures */  
+      return 0;  
+  }  
+  ```
+
+  ```c
+  //key类型为字符数组的完整的例子
+  #include <string.h>  /* strcpy */  
+  #include <stdlib.h>  /* malloc */  
+  #include <stdio.h>   /* printf */  
+  #include "uthash.h"  
+    
+  struct my_struct {  
+      char name[10];             /* key (string is WITHIN the structure) */  
+      int id;  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+    
+    
+  int main(int argc, char *argv[]) {  
+      const char **n, *names[] = { "joe", "bob", "betty", NULL };  
+      struct my_struct *s, *tmp, *users = NULL;  
+      int i=0;  
+    
+      for (n = names; *n != NULL; n++) {  
+          s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+          strncpy(s->name, *n,10);  
+          s->id = i++;  
+          HASH_ADD_STR( users, name, s );  
+      }  
+    
+      HASH_FIND_STR( users, "betty", s);  
+      if (s) printf("betty's id is %d\n", s->id);  
+    
+      /* free the hash table contents */  
+      HASH_ITER(hh, users, s, tmp) {  
+        HASH_DEL(users, s);  
+        free(s);  
+      }  
+      return 0;  
+  }  
+  ```
+  
+  ```c
+  //key类型为字符指针的完整的例子
+  #include <string.h>  /* strcpy */  
+  #include <stdlib.h>  /* malloc */  
+  #include <stdio.h>   /* printf */  
+  #include "uthash.h"  
+    
+  struct my_struct {  
+      const char *name;          /* key */  
+      int id;  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+    
+    
+  int main(int argc, char *argv[]) {  
+      const char **n, *names[] = { "joe", "bob", "betty", NULL };  
+      struct my_struct *s, *tmp, *users = NULL;  
+      int i=0;  
+    
+      for (n = names; *n != NULL; n++) {  
+          s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+          s->name = *n;  
+          s->id = i++;  
+          HASH_ADD_KEYPTR( hh, users, s->name, strlen(s->name), s );  
+      }  
+    
+      HASH_FIND_STR( users, "betty", s);  
+      if (s) printf("betty's id is %d\n", s->id);  
+    
+      /* free the hash table contents */  
+      HASH_ITER(hh, users, s, tmp) {  
+        HASH_DEL(users, s);  
+        free(s);  
+      }  
+      return 0;  
+  }  
+  ```
+  
+  
+
+## 技巧
 
 - 二进制计算
 
@@ -1713,7 +2023,7 @@ int Pop(Sqstack *S)
 - 
 
 
-## 8. 题型
+## 题型
 
 ### 跳跃问题
 
@@ -1790,7 +2100,58 @@ bool canJump(int* nums, int numsSize)
   }
   ```
 
+### 回溯算法
 
+- 算法核心
+
+  1. 解空间
+
+     当算法运行到某一步时，解空间是已知的。
+
+  2. 回溯并搜索
+
+     当走到某一步出现错误时，算法保存了上一步的结果，并能返回上一步。
+
+- 算法步骤
+
+  1. 针对所给问题，定义问题的**解空间**
+
+  2. 确定易搜索的解空间结构
+
+  3. 以**深度优先**方式搜索解空间，并在搜索过程中用剪枝函数避免无效搜索。
+
+  两个常用的剪枝函数：
+
+  1. 约束函数：在扩展结点中剪去不满足约束的子树
+
+  2.  限界函数：剪去得不到最优解的子树
+
+- 算法模板
+
+  ```c++
+  result = []
+  def backtrack(路径, 选择列表):
+      if 满足结束条件:
+          result.add(路径)
+          return
+      for 选择 in 选择列表:
+          做选择
+          backtrack(路径, 选择列表)
+          撤销选择
+  ```
+
+  ```c++
+  //其核心就是 for 循环里面的递归，在递归调用之前「做选择」，在递归调用之后「撤销选择」，特别简单。我们定义的 backtrack 函数其实就像一个指针，在这棵树上游走，同时要正确维护每个节点的属性，每当走到树的底层，其「路径」就是一个全排列。
+  ```
+
+  
+
+  
+
+- 题型（已在leetcode写了解答）
+
+  - [全排列I](https://leetcode-cn.com/problems/permutations/)
+  - 全排列II
 
 
 
