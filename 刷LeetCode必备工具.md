@@ -1478,6 +1478,8 @@ int Pop(Sqstack *S)
 
 ## 7. 哈希表
 
+来自[博客](https://blog.csdn.net/whatday/article/details/95926766)
+
 - 结构
 
   ```c
