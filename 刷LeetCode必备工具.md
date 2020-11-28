@@ -10,7 +10,7 @@
 
 ### 前言
 
-有关于在刷Leetcode过程当中的各种参数讲解（看着有点头痛）
+> 有关于在刷Leetcode过程当中的各种参数讲解（看着有点头痛）
 
 ```c
 /**
@@ -77,6 +77,8 @@ int** transpose(int** A, int ASize, int* AColSize, int* returnSize, int** return
   }
   ```
 
+  
+
 - 采用leetcode内部排序算法也行，不过先指定升序还是降序
 
   ```c
@@ -135,6 +137,96 @@ int** transpose(int** A, int ASize, int* AColSize, int* returnSize, int** return
       return  head;
   }
   
+  ```
+
+  
+
+- 归并排序
+
+  > 思路：
+  > 1. 将数组分解成单个元素
+  > 2. 两两合并，然后相邻的四个合并，以此递增直到整个数组
+  >
+  > 算法复杂度分析
+  >
+  > 1. 平均时间复杂度：O(nlogn)
+  > 2. 最佳时间复杂度：O(n)
+  > 3. 最差时间复杂度：O(nlogn)
+  > 4. 空间复杂度：O(n)
+  > 5. 排序方式：In-place
+  > 6. 稳定性：稳定
+
+  ```c
+  //递归版本---好理解
+  int *b=(int *)malloc(sizeof(int)*(n+1));        //辅助数组
+  void merge(int a[],int low,int mid,int high)    //看着参数就知道需要调用递归实现[low,mid]和[mid+1,high]各自数组都是有序的
+  {
+     for(int k=low;k<=high;k++)
+     {
+         b[k]=a[k]       //将a[low,high]范围内的数复制到b当中
+     }
+     for(int i=low ,int j=mid+1,k=i;i<mid && j<=high;k++)
+     {
+     //将较小的值复制到a当中去
+         if(b[i]<b[j])
+           a[k]=b[i++];   
+         else
+           a[k]=b[j++];
+     }
+     while(i<=mid)a[k++]=b[i++];   //若第一个数组比较完之后还剩下数，则直接复制进去
+     while(j<=high)a[k++]=b[j++];  //同理
+  }
+  
+  
+  
+  //调用函数
+  void MergeSort(int a[],int low,int high)
+  {
+      if(low<high)
+      {
+          int mid=(low+high)/2;
+          //进行递归划分
+          MergeSort(a,low,mid);
+          MergeSort(a,mid+1,high);
+          //进行比较
+          merge(a,low,mid,high);
+      }
+  }
+  
+  
+  // 归并排序（C-迭代版）------不好理解
+  int min(int x, int y) {
+      return x < y ? x : y;
+  }//返回最小值
+  void merge_sort(int arr[], int len) {
+      int* a = arr;
+      int* b = (int*) malloc(len * sizeof(int));
+      int seg, start;
+      for (seg = 1; seg < len; seg += seg) { //粒度1，2，4，8，.....
+          for (start = 0; start < len; start += seg + seg) {
+              int low = start, mid = min(start + seg, len), high = min(start + seg + seg, len);
+              int k = low;
+              int start1 = low, end1 = mid;
+              int start2 = mid, end2 = high;
+              while (start1 < end1 && start2 < end2)
+                  b[k++] = a[start1] < a[start2] ? a[start1++] : a[start2++];
+              while (start1 < end1)
+                  b[k++] = a[start1++];
+              while (start2 < end2)
+                  b[k++] = a[start2++];
+          }
+          int* temp = a;
+          a = b;
+          b = temp;
+      }
+      if (a != arr) {
+          int i;
+          for (i = 0; i < len; i++)
+              b[i] = a[i];
+          b = a;
+      }
+      free(b);
+  }
   ```
 
 - 
