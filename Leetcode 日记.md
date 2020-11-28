@@ -175,13 +175,46 @@
   > }
   > ```
   >
-  > 
-
-  
-
-   
+  >  
 
 - 实现代码
+
+  ```c
+  //递归版本---好理解
+  int *b=(int *)malloc(sizeof(int)*(n+1));        //辅助数组
+  void merge(int a[],int low,int mid,int high)    //看着参数就知道需要调用递归实现[low,mid]和[mid+1,high]各自数组都是有序的
+  {
+     for(int k=low;k<=high;k++)
+     {
+         b[k]=a[k]       //将a[low,high]范围内的数复制到b当中
+     }
+     for(int i=low ,int j=mid+1,k=i;i<mid && j<=high;k++)
+     {
+     //将较小的值复制到a当中去
+         if(b[i]<b[j])
+           a[k]=b[i++];   
+         else
+           a[k]=b[j++];
+     }
+     while(i<=mid)a[k++]=b[i++];   //若第一个数组比较完之后还剩下数，则直接复制进去
+     while(j<=high)a[k++]=b[j++];  //同理
+  }
+  //调用函数
+  void MergeSort(int a[],int low,int high)
+  {
+      if(low<high)
+      {
+          int mid=(low+high)/2;
+          //进行递归划分
+          MergeSort(a,low,mid);
+          MergeSort(a,mid+1,high);
+          //进行比较
+          merge(a,low,mid,high);
+      }
+  }
+  ```
+
+  
 
 
 
