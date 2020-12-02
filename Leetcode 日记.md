@@ -218,5 +218,114 @@
 
 
 
-## 2020.11.29
+## 2020.12.2
+
+- [每日一题](https://leetcode-cn.com/problems/create-maximum-number/)
+
+- 主题：单调栈
+
+- 单调栈
+
+  >**单调栈就是栈里面存放的数据都是有序的，所以可以分为单调递增栈和单调递减栈两种。**
+  >
+  >单调递增栈：数据**出栈**的序列为单调递增序列
+  >
+  >单调递减栈：数据**出栈**的序列为单调递减序列
+
+- 练手题
+
+  - [最大矩形](https://leetcode-cn.com/problems/largest-rectangle-in-histogram/)
+
+- 题目思路
+
+  >为了找到长度为 kk 的最大数，需要从两个数组中分别选出最大的子序列，这两个子序列的长度之和为 k，然后将这两个子序列合并得到最大数。两个子序列的长度最小为 0，最大不能超过 k 且不能超过对应的数组长度。
+  >
+  >令数组 nums1的长度为 m,数组nums2的长度为 n，则需要从数组nums1中选出长度为 x 的子序列，以及从数组 nums2中选出长度为 y的子序列，其中 x+y=k，且满足0≤x≤m 和0≤y≤n。需要遍历所有可能的 x 和 y 的值，对于每一组 x 和 y 的值，得到最大数。在整个过程中维护可以通过拼接得到的最大数。
+  >
+  >对于每一组 xx 和 yy 的值，得到最大数的过程分成两步，第一步是分别从两个数组中得到指定长度的最大子序列，第二步是将两个最大子序列合并。
+  >
+  >第一步可以通过单调栈实现。单调栈满足从栈底到栈顶的元素单调递减，从左到右遍历数组，遍历过程中维护单调栈内的元素，需要保证遍历结束之后单调栈内的元素个数等于指定的最大子序列的长度。遍历结束之后，将从栈底到栈顶的元素依次拼接，即得到最大子序列。
+  >
+  >第二步需要自定义比较方法。首先比较两个子序列的当前元素，如果两个当前元素不同，则选其中较大的元素作为下一个合并的元素，否则需要比较后面的所有元素才能决定选哪个元素作为下一个合并的元素。
+  >
+
+- 实现代码
+
+  ```c
+  int compare(int* subseq1, int subseq1Size, int index1, int* subseq2, int subseq2Size, int index2) {
+      while (index1 < subseq1Size && index2 < subseq2Size) {
+          int difference = subseq1[index1] - subseq2[index2];
+          if (difference != 0) 
+          {
+              return difference;
+          }
+          index1++;
+          index2++;
+      }
+      return (subseq1Size - index1) - (subseq2Size - index2);
+  }
+  
+  int* merge(int* subseq1, int subseq1Size, int* subseq2, int subseq2Size) {
+      if (subseq1Size == 0) {
+          return subseq2;
+      }
+      if (subseq2Size == 0) {
+          return subseq1;
+      }
+      int mergeLength = subseq1Size + subseq2Size;
+      int* merged = malloc(sizeof(int) * (subseq1Size + subseq2Size));
+      int index1 = 0, index2 = 0;
+      for (int i = 0; i < mergeLength; i++) {
+          if (compare(subseq1, subseq1Size, index1, subseq2, subseq2Size, index2) > 0) {
+              merged[i] = subseq1[index1++];
+          } else {
+              merged[i] = subseq2[index2++];
+          }
+      }
+      return merged;
+  }
+  
+  int* MaxSubsequence(int* nums, int numsSize, int k) {
+      int* stack = malloc(sizeof(int) * k);
+      memset(stack, 0, sizeof(int) * k);
+      int top = -1;
+      int remain = numsSize - k;
+      for (int i = 0; i < numsSize; i++) {
+          int num = nums[i];
+          while (top >= 0 && stack[top] < num && remain > 0) {
+              top--;
+              remain--;
+          }
+          if (top < k - 1) {
+              stack[++top] = num;
+          } else {
+              remain--;
+          }
+      }
+      return stack;
+  }
+  
+  void swap(int** a, int** b) {
+      int* tmp = *a;
+      *a = *b, *b = tmp;
+  }
+  
+  int* maxNumber(int* nums1, int nums1Size, int* nums2, int nums2Size, int k, int* returnSize) {
+      int* maxSubsequence = malloc(sizeof(int) * k);
+      memset(maxSubsequence, 0, sizeof(int) * k);
+      *returnSize = k;
+      int start = fmax(0, k - nums2Size), end = fmin(k, nums1Size);
+      for (int i = start; i <= end; i++) {
+          int* subseq1 = MaxSubsequence(nums1, nums1Size, i);
+          int* subseq2 = MaxSubsequence(nums2, nums2Size, k - i);
+          int* curMaxSubsequence = merge(subseq1, i, subseq2, k - i);
+          if (compare(curMaxSubsequence, k, 0, maxSubsequence, k, 0) > 0) {
+              swap(&curMaxSubsequence, &maxSubsequence);
+          }
+      }
+      return maxSubsequence;
+  }
+  ```
+
+  
 
