@@ -327,5 +327,56 @@
   }
   ```
 
+
+
+
+## 2020.12.3
+
+- [每日一题](https://leetcode-cn.com/problems/count-primes/submissions/)
+
+- 主题：质数个数的判断
+
+- 方法
+
+  - 方法一：**埃氏筛**
+
+    基于这样的事实：如果x是质数，2x、3x、4x、......都是质数。
+
+    因此我们所要做的就是先设立一个数组来记录所有数是否是质数，并遍历该数组。当从小到大遍历到数 x 时，倘若它是合数，则它一定是某个小于 x 的质数 y 的整数倍，故根据此方法的步骤，我们在遍历到 y 时，就一定会在此时将 x标isPrime[x]=0。因此，这种方法也不会将合数标记为质数。当然这里还可以继续优化，对于一个质数 x，如果按上文说的我们从 2x开始标记其实是冗余的，应该直接从 x⋅x 开始标记，因为 2x,3x,… 这些数一定在 x之前就被其他数的倍数标记过了，例如 2的所有倍数，3的所有倍数等。
+
+  - 方法二：**线性筛**
+
+    暂时不讲
+
+- 实现
+
+  ```c
+  int countPrimes(int n){
+     if(n<2)
+     {
+         return 0;
+     }
+     int isPrime[n];//标记是否合数
+     int ret=0;
+     memset(isPrime,0,sizeof(isPrime));
+     for(int i=2;i<n;i++)
+     {
+         if(!isPrime[i])
+         {
+             ret++;
+               if((long long)i*i<n){
+                   for(int j=i*i;j<n;j+=i)
+                   {
+                       isPrime[j]=1;
+                   }
+               }
+         }
+     }
+   return ret;
+  }
+  ```
+
   
+
+
 
