@@ -376,7 +376,141 @@
   }
   ```
 
+
+## 2020.12.8
+
+- [每日一题](https://leetcode-cn.com/problems/split-array-into-fibonacci-sequence/submissions/)
+
+- 主题
+
+  [回溯法](https://blog.csdn.net/weiyuefei/article/details/79316653)
+
+- 回溯法
+
+  > 简述：
+  >
+  > ​       把问题的解空间转化成了图或者树的结构表示，然后使用深度优先搜索策略进行遍历，遍历的过程中记录和寻找所有可行解或者最  优解。基本思想类同于：
+  >
+  > - 图的深度优先搜索
+  > - 二叉树的后序遍历
+  >
+  > 详细描述：
+  >
+  > ​        回溯法按深度优先策略搜索问题的解空间树。首先从根节点出发搜索解空间树，当算法搜索至解空间树的某一节点时，先利用**剪枝函数**判断该节点是否可行（即能得到问题的解）。如果不可行，则跳过对该节点为根的子树的搜索，逐层向其祖先节点回溯；否则，进入该子树，继续按深度优先策略搜索。
+  >
+  > ​        回溯法的基本行为是搜索，搜索过程使用剪枝函数来为了避免无效的搜索。剪枝函数包括两类：1. 使用约束函数，剪去不满足约束条件的路径；2.使用限界函数，剪去不能得到最优解的路径。
+  >
+  > ​        问题的关键在于如何定义问题的解空间，转化成树（即解空间树）。解空间树分为两种：子集树和排列树。两种在算法结构和思路上大体相同。
+
+  ​    
+
+- 回溯法的解题思路
+
+  >
+
+- 实现思路
+
+- 实现代码
+
+  ```c
+  /**
+   * Note: The returned array must be malloced, assume caller calls free().
+   */
+  bool backtrack(int* list, int* listSize, char* S, int length, int index, long long sum, int prev) {
+      if (index == length) 
+      {
+          return (*listSize) >= 3;
+      }
+      long long curr = 0;
+      for (int i = index; i < length; i++) {
+          if (i > index && S[index] == '0') {
+              break;
+          }
+          curr = curr * 10 + S[i] - '0';
+          if (curr > INT_MAX) {
+              break;
+          }
+          if ((*listSize) >= 2) {
+              if (curr < sum) {
+                  continue;
+              } else if (curr > sum) {
+                  break;
+              }
+          }
+          list[(*listSize)++] = curr;
+          if (backtrack(list, listSize, S, length, i + 1, prev + curr, curr)) {
+              return true;
+          }
+          (*listSize)--;
+      }
+      return false;
+  }
+  int* splitIntoFibonacci(char* S, int* returnSize) {
+      int n = strlen(S);
+      int* list = malloc(sizeof(int) * n);
+      *returnSize = 0;
+      backtrack(list, returnSize, S, strlen(S), 0, 0, 0);
+      return list;
+  }
+  ```
+
   
+
+  
+
+## 2020.12.16
+
+- [每日一题](https://leetcode-cn.com/problems/word-pattern/comments/)
+
+- 哈希表
+
+- 实现思路
+
+  > 根据题意，建立一个双向哈希表：string_to_char  以及char_to_string，然后遍历s数组，找到矛盾，如果存在矛盾则返回错误。
+  >
+  > **注意：**以后遇见哈希表有关得问题以及字符相关的问题，优先考虑C++，因为C语言在这两方面做起来太复杂
+
+- 实现代码、
+
+  ```c++
+  class Solution {
+  public:
+      bool wordPattern(string pattern, string str) {
+          unordered_map<string, char> str2ch;
+          unordered_map<char, string> ch2str;
+          int m = str.length();
+          int i = 0;
+          for (auto ch : pattern) {
+              if (i >= m) {
+                  return false;
+              }
+              int j = i;
+              while (j < m && str[j] != ' ') j++;
+              const string &tmp = str.substr(i, j - i);
+              if (str2ch.count(tmp) && str2ch[tmp] != ch) {
+                  return false;
+              }
+              if (ch2str.count(ch) && ch2str[ch] != tmp) {
+                  return false;
+              }
+              str2ch[tmp] = ch;
+              ch2str[ch] = tmp;
+              i = j + 1;
+          }
+          return i >= m;
+      }
+  };
+  ```
+
+  
+
+
+
+## 2020.12.17
+
+
+
+
 
 
 
