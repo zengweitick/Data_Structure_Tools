@@ -2,31 +2,52 @@
 
 ## Content
 
- * [刷LeetCode必备工具](#刷leetcode必备工具)
-      * [1. 排序](#1-排序)
-      * [2. 遍历](#2-遍历)
-      * [3. 树](#3-树)
-         * [3.1 树与子树问题](#31-树与子树问题)
-         * [3.2 树的构造](#32-树的构造)
-         * [3.3 求树高](#33-求树高)
-         * [3.4  层次遍历(非递归实现)](#34--层次遍历非递归实现)
-         * [3.5 求树宽](#35-求树宽)
-         * [3.6 树的先序、中序、后序遍历算法](#36-树的先序中序后序遍历算法)
-            * [<strong>3.6.1 递归实现</strong>](#361-递归实现)
-            * [<strong>3.6.2 非递归实现</strong>](#362-非递归实现)
-         * [3.7 N叉树前序遍历](#37-n叉树前序遍历)
-      * [4. 递归](#4-递归)
-      * [5. 队列](#5-队列)
-         * [创建队列](#创建队列)
-         * [队列操作](#队列操作)
-      * [6. 栈](#6-栈)
-         * [创建栈](#创建栈)
-         * [栈的操作](#栈的操作)
-      * [7. 技巧](#7-技巧)
-      * [8. 题型](#8-题型)
-         * [跳跃问题](#跳跃问题)
+[toc]
+
+
 
 ---
+
+### 前言
+
+> 有关于在刷Leetcode过程当中的各种参数讲解（看着有点头痛）
+
+```c
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** transpose(int** A, int ASize, int* AColSize, int* returnSize, int** returnColumnSizes){
+    int col_len=ASize;
+    int row_len=*AColSize;
+
+    int **ret=(int **)malloc(sizeof(int *)*row_len);//返回值初始化
+    for(int i=0;i<row_len;i++)
+    {
+        ret[i]=(int *)malloc(sizeof(int)*col_len);
+    }
+     //遍历赋值
+    for(int i=0;i<row_len;i++)
+    {
+        for(int j=0;j<col_len;j++)
+        {
+            ret[i][j]=A[j][i];
+        }
+    }
+    *returnSize=row_len;  //返回二维数组的行数
+    *returnColumnSizes = (int *)malloc(sizeof(int) * row_len);
+    for(int j=0;j<row_len;j++)
+    {
+       (*returnColumnSizes)[j]=col_len; //赋予每一行的数量
+    }
+    return ret;
+}
+//综上：
+//1. 返回的二维数组先要以行数来分配整个二维空间的大小，其次在进行赋值的时候要为每一行分配空间以列数为大小。
+//2. *returnSize: 返回二维数组的行数
+//3. **returnColumnSizes：记录的是每一行元素的个数，因此先以行数大小来决定分配空间的大小。其次在进行赋值过程当中最好采用            (*returnColumnSizes)[j]形式来。
+```
 
 
 
@@ -55,6 +76,7 @@
       }  
   }
   ```
+
 
 - 桶排序
 
@@ -110,6 +132,158 @@
     
 
     
+
+  
+
+- 采用leetcode内部排序算法也行，不过先指定升序还是降序
+
+  ```c
+  //升序
+  int cmp(const void *a, const void *b)
+  {
+      return *(int*)a-*(int*)b;
+  }
+  //降序
+  int cmp(const void *a, const void *b)
+  {
+      return *(int*)b-*(int*)a;
+  }
+  //在程序当中使用
+   qsort(array,count,sizeof(int),cmp);
+  //array:要排序的数组
+  //count:数组大小
+  //sizeof(int):单个元素大小
+  //cmp:指定的排序方式
+  //例子如下：
+  //-------------------------------------------------------------------------------------------------------
+  void intoArray(struct ListNode* head,int *array,int *count)
+  {
+      struct ListNode* node=head;
+      while(node!=NULL)
+      {
+         array[*count]=node->val;
+         *count=*count+1;
+         node=node->next;
+      }
+  }
+  int cmp(const void *a, const void *b)
+  {
+      return *(int*)a-*(int*)b;
+  }
+  void intoListNode(struct ListNode *ret,int *array,int len)
+  {
+      struct ListNode* p=ret;
+      
+      for(int i=0;i<len;i++)
+      {
+          p->val=array[i];
+          p=p->next;
+      }
+  }
+  struct ListNode* sortList(struct ListNode* head)
+  {
+      if(head==NULL||head->next==NULL)return head;
+       int array[50000]={0};
+      if(array==NULL)return NULL;
+      
+      int count=0;
+      intoArray(head,array,&count);
+      qsort(array,count,sizeof(int),cmp);
+      intoListNode(head,array,count);
+      return  head;
+  }
+  
+  ```
+
+  
+
+- 归并排序
+
+  > 思路：
+  > 1. 将数组分解成单个元素
+  > 2. 两两合并，然后相邻的四个合并，以此递增直到整个数组
+  >
+  > 算法复杂度分析
+  >
+  > 1. 平均时间复杂度：O(nlogn)
+  > 2. 最佳时间复杂度：O(n)
+  > 3. 最差时间复杂度：O(nlogn)
+  > 4. 空间复杂度：O(n)
+  > 5. 排序方式：In-place
+  > 6. 稳定性：稳定
+
+  ```c
+  //递归版本---好理解
+  int *b=(int *)malloc(sizeof(int)*(n+1));        //辅助数组
+  void merge(int a[],int low,int mid,int high)    //看着参数就知道需要调用递归实现[low,mid]和[mid+1,high]各自数组都是有序的
+  {
+     for(int k=low;k<=high;k++)
+     {
+         b[k]=a[k]       //将a[low,high]范围内的数复制到b当中
+     }
+     for(int i=low ,int j=mid+1,k=i;i<mid && j<=high;k++)
+     {
+     //将较小的值复制到a当中去
+         if(b[i]<b[j])
+           a[k]=b[i++];   
+         else
+           a[k]=b[j++];
+     }
+     while(i<=mid)a[k++]=b[i++];   //若第一个数组比较完之后还剩下数，则直接复制进去
+     while(j<=high)a[k++]=b[j++];  //同理
+  }
+  
+  
+  
+  //调用函数
+  void MergeSort(int a[],int low,int high)
+  {
+      if(low<high)
+      {
+          int mid=(low+high)/2;
+          //进行递归划分
+          MergeSort(a,low,mid);
+          MergeSort(a,mid+1,high);
+          //进行比较
+          merge(a,low,mid,high);
+      }
+  }
+  
+  
+  // 归并排序（C-迭代版）------不好理解
+  int min(int x, int y) {
+      return x < y ? x : y;
+  }//返回最小值
+  void merge_sort(int arr[], int len) {
+      int* a = arr;
+      int* b = (int*) malloc(len * sizeof(int));
+      int seg, start;
+      for (seg = 1; seg < len; seg += seg) { //粒度1，2，4，8，.....
+          for (start = 0; start < len; start += seg + seg) {
+              int low = start, mid = min(start + seg, len), high = min(start + seg + seg, len);
+              int k = low;
+              int start1 = low, end1 = mid;
+              int start2 = mid, end2 = high;
+              while (start1 < end1 && start2 < end2)
+                  b[k++] = a[start1] < a[start2] ? a[start1++] : a[start2++];
+              while (start1 < end1)
+                  b[k++] = a[start1++];
+              while (start2 < end2)
+                  b[k++] = a[start2++];
+          }
+          int* temp = a;
+          a = b;
+          b = temp;
+      }
+      if (a != arr) {
+          int i;
+          for (i = 0; i < len; i++)
+              b[i] = a[i];
+          b = a;
+      }
+      free(b);
+  }
+  ```
 
 - 
 
@@ -444,8 +618,8 @@ int main()
 
 - 问题描述
 
-  ```
-  给定一棵树求这棵树的树高
+  ```c
+  //给定一棵树求这棵树的树高
   ```
 
 - 解决方案
@@ -993,7 +1167,20 @@ void Postsearch(BigTree *b,int x)
   }
   ```
 
-  
+
+
+
+### 3.8 BFS && DFS
+
+#### 3.8.1 BFS
+
+
+
+#### 3.8.2 DFS
+
+
+
+
 
 
 
@@ -1437,9 +1624,319 @@ int Pop(Sqstack *S)
 */
 ```
 
+## 7. 哈希表
 
+来自[博客](https://blog.csdn.net/whatday/article/details/95926766)
 
-## 7. 技巧
+- 结构
+
+  ```c
+  #include"uthash.h"  
+  struct my_struct {  
+      int id;                    /* key */  
+      char name[10];             /* value */  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+  //hh是内部使用的hash处理句柄，在使用过程中，只需要在结构体中定义一个UT_hash_handle类型的变量即可，不需要为该句柄变量赋值，但必须在该结构体中定义该变量。
+  ```
+
+- 操作
+
+  - 查找
+
+    ```c
+    struct my_struct *find_user(int ikey) {  
+    struct my_struct *s;  
+    HASH_FIND_INT(g_users, &ikey, s );  
+    return s;  
+    }
+    //查找是利用宏来实现的，先声明hashTable变量来存储查找结果。
+    //第一个参数：查找的hash表
+    //第二个参数：投入查找的键值
+    //第三个参数：刚刚声明的结构体，原来存放结果。
+    ```
+
+  - 添加
+
+    ```c
+    void add_user(int ikey, char *value_buf) {  
+        struct my_struct *s;  
+        HASH_FIND_INT(g_users, &ikey, s);  /* 插入前先查看key值是否已经在hash表g_users里面了 */  
+        if (s==NULL) {  
+          s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+          s->ikey = ikey;  
+          HASH_ADD_INT(g_users, ikey, s );  /* 这里必须明确告诉插入函数，自己定义的hash结构体中键变量的名字 */  
+        }  
+        strcpy(s-> value, value_buf);  
+    }  
+    //同理，添加操作也是通过宏来实现
+    //由于uthash要求键（key）必须唯一，而uthash内部未对key值得唯一性进行很好的处理，因此它要求外部在插入操作时要确保其key值不在当前的hash表中，这就需要，在插入操作时，先查找hash表看其值是否已经存在，不存在在时再进行插入操作，在这里需要特别注意以下两点：
+    
+    ```
+
+    
+
+  - 删除
+
+    ```c
+    void delete_user(int ikey) {  
+        struct my_struct *s = NULL;  
+        HASH_FIND_INT(g_users, &ikey, s);  
+        if (s!=NULL) {  
+          HASH_DEL(g_users, s);   
+          free(s);              
+        }  
+    }  
+    ```
+
+  - 清空
+
+    ```c
+    void delete_all() {  
+      struct my_struct *current_user, *tmp;  
+      HASH_ITER(hh, users, current_user, tmp) {  
+      HASH_DEL(g_users,current_user);    
+    free(current_user);              
+      }  
+    }  
+    
+    //或者这里需要注意：uthash内部提供了另外一个清空函数:
+    HASH_CLEAR(hh, g_users);
+    ```
+
+  - **统计hash表中的已经存在的元素数**
+
+    ```c
+    unsigned int num_users;  
+    num_users = HASH_COUNT(g_users);  
+    printf("there are %u items\n", num_users);  
+    ```
+
+- 注意
+  -  在定义hash结构体时不要忘记定义**UT_hash_handle**的变量
+  -  需确保key值唯一，如果插入key-value对时，key值已经存在，再插入的时候就会出错。
+  - **不同的key值，其增加和查找调用的接口函数不一样，具体可见第4节。一般情况下，不通类型的key，其插入和查找接口函数是不一样的，删除、遍历、元素统计接口是通用的，特殊情况下，字符数组和字符串作为key值时，其插入接口函数不一样，但是查找接口是一样的。**
+
+- 完整例子
+
+  ```c
+  //key类型为int的完整的例子
+  #include <stdio.h>   /* gets */  
+  #include <stdlib.h>  /* atoi, malloc */  
+  #include <string.h>  /* strcpy */  
+  #include "uthash.h"  
+    
+  struct my_struct {  
+      int ikey;                    /* key */  
+      char value[10];  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+    
+  static struct my_struct *g_users = NULL;  
+    
+  void add_user(int mykey, char *value) {  
+      struct my_struct *s;  
+    
+      HASH_FIND_INT(users, &mykey, s);  /* mykey already in the hash? */  
+      if (s==NULL) {  
+        s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+        s->ikey = mykey;  
+        HASH_ADD_INT( users, ikey, s );  /* ikey: name of key field */  
+      }  
+      strcpy(s->value, value);  
+  }  
+    
+  struct my_struct *find_user(int mykey) {  
+      struct my_struct *s;  
+    
+      HASH_FIND_INT( users, &mykey, s );  /* s: output pointer */  
+      return s;  
+  }  
+    
+  void delete_user(struct my_struct *user) {  
+      HASH_DEL( users, user);  /* user: pointer to deletee */  
+      free(user);  
+  }  
+    
+  void delete_all() {  
+    struct my_struct *current_user, *tmp;  
+    
+    HASH_ITER(hh, users, current_user, tmp) {  
+      HASH_DEL(users,current_user);  /* delete it (users advances to next) */  
+      free(current_user);            /* free it */  
+    }  
+  }  
+    
+  void print_users() {  
+      struct my_struct *s;  
+    
+      for(s=users; s != NULL; s=(struct my_struct*)(s->hh.next)) {  
+          printf("user ikey %d: value %s\n", s->ikey, s->value);  
+      }  
+  }  
+    
+  int name_sort(struct my_struct *a, struct my_struct *b) {  
+      return strcmp(a->value,b->value);  
+  }  
+    
+  int id_sort(struct my_struct *a, struct my_struct *b) {  
+      return (a->ikey - b->ikey);  
+  }  
+    
+  void sort_by_name() {  
+      HASH_SORT(users, name_sort);  
+  }  
+    
+  void sort_by_id() {  
+      HASH_SORT(users, id_sort);  
+  }  
+    
+  int main(int argc, char *argv[]) {  
+      char in[10];  
+      int ikey=1, running=1;  
+      struct my_struct *s;  
+      unsigned num_users;  
+    
+      while (running) {  
+          printf(" 1. add user\n");  
+          printf(" 2. add/rename user by id\n");  
+          printf(" 3. find user\n");  
+          printf(" 4. delete user\n");  
+          printf(" 5. delete all users\n");  
+          printf(" 6. sort items by name\n");  
+          printf(" 7. sort items by id\n");  
+          printf(" 8. print users\n");  
+          printf(" 9. count users\n");  
+          printf("10. quit\n");  
+          gets(in);  
+          switch(atoi(in)) {  
+              case 1:  
+                  printf("name?\n");  
+                  add_user(ikey++, gets(in));  
+                  break;  
+              case 2:  
+                  printf("id?\n");  
+                  gets(in); ikey = atoi(in);  
+                  printf("name?\n");  
+                  add_user(ikey, gets(in));  
+                  break;  
+              case 3:  
+                  printf("id?\n");  
+                  s = find_user(atoi(gets(in)));  
+                  printf("user: %s\n", s ? s->value : "unknown");  
+                  break;  
+              case 4:  
+                  printf("id?\n");  
+                  s = find_user(atoi(gets(in)));  
+                  if (s) delete_user(s);  
+                  else printf("id unknown\n");  
+                  break;  
+              case 5:  
+                  delete_all();  
+                  break;  
+              case 6:  
+                  sort_by_name();  
+                  break;  
+              case 7:  
+                  sort_by_id();  
+                  break;  
+              case 8:  
+                  print_users();  
+                  break;  
+              case 9:  
+                  num_users=HASH_COUNT(users);  
+                  printf("there are %u users\n", num_users);  
+                  break;  
+              case 10:  
+                  running=0;  
+                  break;  
+          }  
+      }  
+    
+      delete_all();  /* free any structures */  
+      return 0;  
+  }  
+  ```
+
+  ```c
+  //key类型为字符数组的完整的例子
+  #include <string.h>  /* strcpy */  
+  #include <stdlib.h>  /* malloc */  
+  #include <stdio.h>   /* printf */  
+  #include "uthash.h"  
+    
+  struct my_struct {  
+      char name[10];             /* key (string is WITHIN the structure) */  
+      int id;  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+    
+    
+  int main(int argc, char *argv[]) {  
+      const char **n, *names[] = { "joe", "bob", "betty", NULL };  
+      struct my_struct *s, *tmp, *users = NULL;  
+      int i=0;  
+    
+      for (n = names; *n != NULL; n++) {  
+          s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+          strncpy(s->name, *n,10);  
+          s->id = i++;  
+          HASH_ADD_STR( users, name, s );  
+      }  
+    
+      HASH_FIND_STR( users, "betty", s);  
+      if (s) printf("betty's id is %d\n", s->id);  
+    
+      /* free the hash table contents */  
+      HASH_ITER(hh, users, s, tmp) {  
+        HASH_DEL(users, s);  
+        free(s);  
+      }  
+      return 0;  
+  }  
+  ```
+  
+  ```c
+  //key类型为字符指针的完整的例子
+  #include <string.h>  /* strcpy */  
+  #include <stdlib.h>  /* malloc */  
+  #include <stdio.h>   /* printf */  
+  #include "uthash.h"  
+    
+  struct my_struct {  
+      const char *name;          /* key */  
+      int id;  
+      UT_hash_handle hh;         /* makes this structure hashable */  
+  };  
+    
+    
+  int main(int argc, char *argv[]) {  
+      const char **n, *names[] = { "joe", "bob", "betty", NULL };  
+      struct my_struct *s, *tmp, *users = NULL;  
+      int i=0;  
+    
+      for (n = names; *n != NULL; n++) {  
+          s = (struct my_struct*)malloc(sizeof(struct my_struct));  
+          s->name = *n;  
+          s->id = i++;  
+          HASH_ADD_KEYPTR( hh, users, s->name, strlen(s->name), s );  
+      }  
+    
+      HASH_FIND_STR( users, "betty", s);  
+      if (s) printf("betty's id is %d\n", s->id);  
+    
+      /* free the hash table contents */  
+      HASH_ITER(hh, users, s, tmp) {  
+        HASH_DEL(users, s);  
+        free(s);  
+      }  
+      return 0;  
+  }  
+  ```
+  
+  
+
+## 技巧
 
 - 二进制计算
 
@@ -1577,10 +2074,106 @@ int Pop(Sqstack *S)
 
   
 
+- 利用二分法与位运算计算完全二叉树的节点个数（年轻人要讲武德系列）
+
+  - [题目描述](https://leetcode-cn.com/problems/count-complete-tree-nodes/)
+
+  - 实现方法
+
+    - 暴力法
+
+      ```c
+      /*
+      执行用时: 32 ms
+      内存消耗: 16.4 MB
+      */
+      int countNodes(struct TreeNode* root)
+      {
+          if(root==NULL)return 0;
+         return countNodes(root->left)+countNodes(root->right)+1;
+      }
+      ```
+
+    - DFS
+
+      ```c
+      /*
+      执行用时: 24 ms
+      内存消耗: 16.6 MB
+      */
+      void InOrder(struct TreeNode *node,int *count);
+      int countNodes(struct TreeNode* root)
+      {
+          int count=0;
+          InOrder(root,&count);
+           return count;
+      }
+      void InOrder(struct TreeNode *node,int *count)
+      {
+        if(node==NULL)return;
+         if(node->left!=NULL)
+         {
+             InOrder(node->left,count);
+         }
+           *count=*count+1;
+          if(node->right!=NULL)
+          {
+              InOrder(node->right,count);
+          }
+      }
+      
+      ```
+
+      
+
+    - 二分法+位运算
+
+      ```c
+      /*
+      执行用时: 20 ms
+      内存消耗: 16.5 MB
+      */
+      bool exists(struct TreeNode* root, int level, int k) {
+          int bits = 1 << (level - 1);
+          struct TreeNode* node = root;
+          while (node != NULL && bits > 0) {
+              if (!(bits & k)) {
+                  node = node->left;
+              } else {
+                  node = node->right;
+              }
+              bits >>= 1;
+          }
+          return node != NULL;
+      }
+      
+      int countNodes(struct TreeNode* root) {
+          if (root == NULL) {
+              return 0;
+          }
+          int level = 0;
+          struct TreeNode* node = root;
+          while (node->left != NULL) {
+              level++;
+              node = node->left;
+          }
+          int low = 1 << level, high = (1 << (level + 1)) - 1;
+          while (low < high) {
+              int mid = (high - low + 1) / 2 + low;
+              if (exists(root, level, mid)) {
+                  low = mid;
+              } else {
+                  high = mid - 1;
+              }
+          }
+          return low;
+      }
+      ```
+
 - 
 
 
-## 8. 题型
+## 题型
 
 ### 跳跃问题
 
@@ -1623,6 +2216,92 @@ bool canJump(int* nums, int numsSize)
     return true;
 }
 ```
+
+### 组合数学问题
+
+[题目](https://leetcode-cn.com/problems/count-sorted-vowel-strings/)
+
+- 题目分析
+
+```c++
+这个问题的数学解法，可以把问题转换成将 n 个小球放到 5 个盒子里，盒子可以为空。
+
+我们可以想象成把 n 个字符分配给五个元音所代表的盒子中。一旦每个盒子中的字符个数定了，那么这个字符串也固定下来了。因为题目要求必须是字典序，所以一定 a 字符在最前；其次是 e 字符；其次是 i 字符；其次是 o 字符；其次是 u 字符。
+下面问题的关键就是，n 个小球放到 5 个盒子里，盒子可以为空，一共有多少种方法？
+------------------------------------------------------------------------------------------------------------
+这是经典的中学数学问题。更一般的，我们来探讨，将 n 个小球放到 m 个盒子里，有多少种方法？
+首先，我们考虑问题的简单版本，即盒子不能为空的情况。
+此时，我们只需要在 n 个小球排成一排，中间放 m - 1 个隔板，放好以后，相当于把 n 个小球分成了 m 份。每一份对应一个盒子里的小球数量。
+因为盒子不能为空，所以两个小球之间不可能放多个隔板，左右两端也不可能放隔板。因此，放隔板的位置有 n - 1 个，我们要放 m - 1 个隔板。答案为 C(n - 1, m - 1)。
+有了这个结论，再来讨论问题的复杂版本，就简单了，即盒子可以为空的情况。
+ 
+此时，我们只需要先拿 m 个新的小球，在 m 个盒子里，每个盒子中扔进去一个小球。之后，再分配原来的这 n 个小球，得到的分配结果，肯定 m 个盒子里都不为空。但此时，我们使用了 n + m 个小球。换句话说，把 n 个小球放到 m 个盒子里，盒子可以为空，等价于：把 n + m 个小球放到 m 个盒子里，盒子不能为空。大家也可以想成是：我们先把 n + m 个小球放到 m 个盒子里，盒子不能为空，然后再在每个盒子里拿走 1 个小球，总共拿走了 m 个小球，得到的结果，就是把 n 个小球放到 m 个盒子里，盒子可以为空的解。把 n + m 个小球放到 m 个盒子里，盒子不能为空的分法，带入上面的公式，就是 C(n + m - 1, m - 1),所以，把 n 个小球放到 m 个盒子里，盒子可以为空，答案为 C(n + m - 1, m - 1)。
+//总结：
+将 n 个小球放到 m 个盒子里，盒子不为空：C(n - 1, m - 1)；
+将 n 个小球放到 m 个盒子里，盒子可以空：C(n + m - 1, m - 1)；
+```
+
+- 代码实现
+
+  ```c
+  int countVowelStrings(int n)
+  {
+     return (n+4)*(n+3)*(n+2)*(n+1)/24;
+  }
+  ```
+
+### 回溯算法
+
+- 算法核心
+
+  1. 解空间
+
+     当算法运行到某一步时，解空间是已知的。
+
+  2. 回溯并搜索
+
+     当走到某一步出现错误时，算法保存了上一步的结果，并能返回上一步。
+
+- 算法步骤
+
+  1. 针对所给问题，定义问题的**解空间**
+
+  2. 确定易搜索的解空间结构
+
+  3. 以**深度优先**方式搜索解空间，并在搜索过程中用剪枝函数避免无效搜索。
+
+  两个常用的剪枝函数：
+
+  1. 约束函数：在扩展结点中剪去不满足约束的子树
+
+  2.  限界函数：剪去得不到最优解的子树
+
+- 算法模板
+
+  ```c++
+  result = []
+  def backtrack(路径, 选择列表):
+      if 满足结束条件:
+          result.add(路径)
+          return
+      for 选择 in 选择列表:
+          做选择
+          backtrack(路径, 选择列表)
+          撤销选择
+  ```
+
+  ```c++
+  //其核心就是 for 循环里面的递归，在递归调用之前「做选择」，在递归调用之后「撤销选择」，特别简单。我们定义的 backtrack 函数其实就像一个指针，在这棵树上游走，同时要正确维护每个节点的属性，每当走到树的底层，其「路径」就是一个全排列。
+  ```
+
+  
+
+  
+
+- 题型（已在leetcode写了解答）
+
+  - [全排列I](https://leetcode-cn.com/problems/permutations/)
+  - 全排列II
 
 
 
