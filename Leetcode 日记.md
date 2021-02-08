@@ -506,7 +506,53 @@
 
 
 
-## 2020.12.17
+## 2021.2.8
+
+锯齿型问题的求解，或者波动型问题的求解
+
+- 题型：
+
+  [点击此处](https://leetcode-cn.com/problems/longest-turbulent-subarray/submissions/)
+
+- 解答：
+
+  ````c++
+  class Solution {
+  public:
+      int maxTurbulenceSize(vector<int>& arr) {
+          int len = arr.size();
+          // 初始化up, down
+          int up = 1, down = 1;
+          int res = 1;
+          for(int i = 0 ; i < len - 1; i ++) {
+              // 如果是上升趋势
+              if(arr[i + 1] > arr[i]){
+                  up = down + 1;
+                  down = 1;
+              } else if(arr[i + 1] < arr[i]) {// 如果是下降趋势
+                  down = up + 1;
+                  up = 1;
+              } else{
+                  // 重新计数
+                  up = 1;
+                  down = 1;
+              }
+              res = max(res, max(up, down));
+          }
+          return res;
+      }
+  };
+  
+   
+  ````
+
+  >妙啊！
+
+- 
+
+  
+
+
 
 
 
