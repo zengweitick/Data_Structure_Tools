@@ -2249,7 +2249,9 @@ bool canJump(int* nums, int numsSize)
 
 
 
+## 链表
 
+### 基础练习题
 
-
+1. [反链表II](https://leetcode-cn.com/problems/reverse-linked-list-ii/submissions/)
 
